@@ -1,5 +1,5 @@
 """
-八卦編年史 · 完整主路徑（輸入測試用）
+野史錄 · 完整主路徑（輸入測試用）
 
   主文 → 初稿 → 追問 → 成稿 → 評分落盤 → 歷史榜
 
@@ -151,7 +151,7 @@ def run_full_interactive(
     title_deferred: Optional[bool] = None,
     prompt_title: bool = True,
 ) -> int:
-    print("=== 八卦編年史 · 完整流程 ===")
+    print("=== 野史錄 · 完整流程 ===")
     print("步驟：標題 → 主文 → 初稿 → 追問 → 成稿 → 評分 → 榜單\n")
     print_sample()
 
@@ -237,7 +237,7 @@ def resume_event(event_id: str, *, yes: bool) -> int:
 def _cli(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python gossip.py",
-        description="八卦編年史完整流程（輸入測試入口）",
+        description="野史錄完整流程（輸入測試入口）",
     )
     parser.add_argument(
         "--quick",

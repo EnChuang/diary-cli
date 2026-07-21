@@ -1,5 +1,5 @@
 """
-八卦編年史 · 極簡本機 Web 殼（Phase I 起步）
+野史錄 · 極簡本機 Web 殼（Phase I 起步）
 
 啟動（專案根目錄）：
   pip install -r requirements.txt
@@ -60,7 +60,7 @@ from ui.gen_jobs import (  # noqa: E402
 UI_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(UI_DIR / "templates"))
 
-app = FastAPI(title="八卦編年史", docs_url=None, redoc_url=None)
+app = FastAPI(title="野史錄 · Yes Log", docs_url=None, redoc_url=None)
 app.mount("/static", StaticFiles(directory=str(UI_DIR / "static")), name="static")
 
 

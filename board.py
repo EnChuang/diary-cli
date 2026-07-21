@@ -265,7 +265,7 @@ def cmd_status() -> int:
 
 
 def cmd_interactive() -> int:
-    print("=== 八卦編年史 · 榜單（Phase G）===")
+    print("=== 野史錄 · 榜單（Phase G）===")
     print("指令：rank | char <n|名|id> | event <id> | events | status | q\n")
     cmd_rank()
     while True:

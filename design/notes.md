@@ -1,5 +1,24 @@
 # 風格筆記
 
+## 產品名（暫定）
+
+| 語言 | 名稱 |
+|------|------|
+| 中文 | **野史錄** |
+| English | **Yes Log**（野史 ≈ YES 諧音） |
+| repo | diary-cli（暫不改路徑） |
+| Logo | [`design/brand/yes-log-logo.png`](./brand/yes-log-logo.png)（**素材 only**，暫不進 UI） |
+| Wordmark | 頂欄 `.brand`：野史錄 + Yes Log 雙層字 |
+
+## 主題
+
+| 模式 | 來源 |
+|------|------|
+| 亮色 `data-theme="light"` | 現行紅橙 primary 色票 |
+| 暗色 `data-theme="dark"` | primary 藍灰 + accent 紅 `#FF4D4D` |
+| 儲存 | `localStorage['yeslog-theme']` |
+| UI | 頂欄右側 · 月亮＝去暗色／太陽＝去亮色 |
+
 ## 一句話風格
 
 淺色、克制、紅橙主色：清楚層級、少裝飾、閱讀優先。材質參考 apple-design，色票用指定組。

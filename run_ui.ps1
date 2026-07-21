@@ -1,4 +1,4 @@
-# 八卦編年史 UI 啟動腳本
+# 野史錄 UI 啟動腳本
 #   .\run_ui.ps1 -NoReload   ← 測 AI 建議用這個
 #   .\run_ui.ps1             ← 熱重載
 

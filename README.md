@@ -1,6 +1,6 @@
-# diary-cli（八卦編年史）
+# 野史錄 · Yes Log（diary-cli）
 
-本機單人八卦編年史 CLI：Skill + [ModelArk](https://www.byteplus.com/en/product/ModelArk) BYOK + **確認後才落盤**。
+本機單人**野史錄**（English: **Yes Log**）：Skill + [ModelArk](https://www.byteplus.com/en/product/ModelArk) BYOK + **確認後才落盤**。
 
 ```text
 主文 → 初稿 → 追問 → 成稿 → 評分確認 → 歷史榜
@@ -19,6 +19,7 @@
 | `story_*.py` | 初稿／追問／成稿／評分（可分步） |
 | `board.py` | 榜單與閱讀 |
 | `ui/` | **本機 Web UI**（FastAPI + 模板） |
+| `design/brand/` | 品牌 Logo 素材（暫不嵌 UI） |
 | `run_ui.ps1` | UI 啟動腳本（建議 `-NoReload` 測 AI） |
 | `skill/` | AI 提示詞（改行為優先改這裡） |
 | `storage/` | 本地 jsonl 讀寫、評分約束、merge |

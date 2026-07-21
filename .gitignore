@@ -37,3 +37,7 @@ design/**/*.mov
 design/**/*.psd
 design/**/*.fig
 design/**/*.sketch
+# 品牌 logo 允許進庫
+!design/brand/
+!design/brand/**
+
