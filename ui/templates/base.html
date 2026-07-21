@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#fbfbfb" />
+  <title>{% block title %}八卦編年史{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css?v=eye1" />
+  {% if page == 'home' %}
+  <script>
+    /* 首頁防窺：
+       - 重新整理 → 清旗標、需再解鎖
+       - 從新增等頁導回 → session 仍有效、不解鎖 */
+    (function () {
+      var KEY = "diary-cli-unlocked";
+      function navType() {
+        try {
+          var n = performance.getEntriesByType("navigation")[0];
+          return n && n.type ? n.type : "navigate";
+        } catch (e) {
+          return "navigate";
+        }
+      }
+      try {
+        if (navType() === "reload") {
+          sessionStorage.removeItem(KEY);
+        }
+        if (sessionStorage.getItem(KEY) === "1") {
+          document.documentElement.classList.add("privacy-skip");
+          return;
+        }
+      } catch (e) {}
+      document.documentElement.classList.add("privacy-pending");
+    })();
+  </script>
+  {% endif %}
+</head>
+<body>
+  {# Liquid Glass SVG 濾鏡（靈感：iyinchao/liquid-glass-studio 的折射／位移；本專案用 CSS+SVG，非完整 WebGL） #}
+  <svg class="lg-svg-defs" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <filter
+        id="lg-panel"
+        x="-20%"
+        y="-20%"
+        width="140%"
+        height="140%"
+        color-interpolation-filters="sRGB"
+        primitiveUnits="userSpaceOnUse"
+      >
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.012 0.018"
+          numOctaves="3"
+          seed="5"
+          stitchTiles="stitch"
+          result="noise"
+        />
+        <feGaussianBlur in="noise" stdDeviation="1.2" result="softMap" />
+        <feDisplacementMap
+          in="SourceGraphic"
+          in2="softMap"
+          scale="36"
+          xChannelSelector="R"
+          yChannelSelector="G"
+          result="refract"
+        />
+        <feGaussianBlur in="refract" stdDeviation="10" result="frost" />
+        <feColorMatrix
+          in="frost"
+          type="matrix"
+          values="1.05 0 0 0 0.02
+                  0 1.05 0 0 0.02
+                  0 0 1.08 0 0.03
+                  0 0 0 0.92 0"
+          result="glass"
+        />
+      </filter>
+      <filter
+        id="lg-track"
+        x="-15%"
+        y="-40%"
+        width="130%"
+        height="180%"
+        color-interpolation-filters="sRGB"
+      >
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.03 0.05"
+          numOctaves="2"
+          seed="3"
+          result="n"
+        />
+        <feDisplacementMap
+          in="SourceGraphic"
+          in2="n"
+          scale="14"
+          xChannelSelector="R"
+          yChannelSelector="G"
+          result="d"
+        />
+        <feGaussianBlur in="d" stdDeviation="4" result="b" />
+      </filter>
+    </defs>
+  </svg>
+
+  <header class="top">
+    <div class="top-inner">
+      <h1>八卦編年史</h1>
+      <nav class="seg" data-seg aria-label="主要導覽">
+        <span class="seg-pill" data-seg-pill aria-hidden="true"></span>
+        <a href="/" class="seg-item{% if page == 'home' %} active{% endif %}" data-seg-item>首頁</a>
+        <a href="/new" class="seg-item{% if page == 'new' %} active{% endif %}" data-seg-item>新增</a>
+      </nav>
+    </div>
+  </header>
+  <div class="wrap" id="app-main">
+    {% block body %}{% endblock %}
+    <footer class="note">
+      本機 UI · 00-global + 01-home · 素材 <code>design/</code>
+    </footer>
+  </div>
+
+  {% if page == 'home' %}
+  {# 防窺：僅主畫面；重整再解鎖，站內導覽記住 #}
+  <div
+    class="privacy-gate"
+    data-privacy-gate
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="privacy-title"
+    aria-hidden="false"
+  >
+    <div class="privacy-scrim" aria-hidden="true"></div>
+    <div class="privacy-panel glass-panel liquid-glass">
+      <span class="lg-specular" aria-hidden="true"></span>
+      <span class="lg-rim" aria-hidden="true"></span>
+      <div class="lg-inner">
+        <h2 id="privacy-title" class="privacy-title">八卦編年史</h2>
+        <p class="privacy-hint">滑動解鎖後顯示內容</p>
+        <div class="unlock-track liquid-track" data-unlock-track>
+          <div class="unlock-fill" data-unlock-fill></div>
+          <span class="unlock-label" aria-hidden="true">滑動解鎖</span>
+          <button
+            type="button"
+            class="unlock-thumb"
+            data-unlock-thumb
+            aria-label="滑動解鎖"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+            role="slider"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/static/privacy-unlock.js" defer></script>
+  {% endif %}
+
+  <script src="/static/seg-nav.js" defer></script>
+</body>
+</html>

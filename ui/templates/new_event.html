@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{% if is_sequel %}後續{% else %}新增事件{% endif %} · 八卦編年史{% endblock %}
+{% block body %}
+<section class="card">
+  <h2>{% if is_sequel %}後續{% else %}新增事件{% endif %}</h2>
+  {% if is_sequel and parent_title %}
+  <p class="sequel-line">延續：{{ parent_title }}</p>
+  {% endif %}
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/new" data-ai-form>
+    {% if is_sequel %}
+    <input type="hidden" name="parent_id" value="{{ parent_id }}" />
+    {% endif %}
+    <label>事件標題</label>
+    <div class="row-radio">
+      <label><input type="radio" name="title_mode" value="ai" checked id="mode_ai" /> 還不知道，交給 AI</label>
+      <label><input type="radio" name="title_mode" value="manual" id="mode_manual" /> 我要自己取標題</label>
+    </div>
+    <input type="text" name="user_title" id="user_title" placeholder="{% if is_sequel %}例：續・和解{% else %}手填標題{% endif %}" disabled />
+
+    <label>{% if is_sequel %}後續發展{% else %}主文{% endif %}</label>
+    <textarea name="main_text" required placeholder="{% if is_sequel %}後來又發生了什麼…{% else %}描述發生了什麼…{% endif %}"></textarea>
+
+    <div class="actions">
+      <button type="submit" class="primary btn-ai" data-ai-submit>
+        <span class="btn-label">建立</span>
+        <span class="btn-spinner spinner" aria-hidden="true"></span>
+      </button>
+      <a class="btn ghost" href="{% if is_sequel %}/events/{{ parent_id }}{% else %}/{% endif %}">取消</a>
+    </div>
+    <p class="hint">可能需數十秒。</p>
+  </form>
+</section>
+<script>
+  const modeAi = document.getElementById('mode_ai');
+  const modeMan = document.getElementById('mode_manual');
+  const titleIn = document.getElementById('user_title');
+  function sync() {
+    titleIn.disabled = !modeMan.checked;
+    if (titleIn.disabled) titleIn.value = '';
+  }
+  modeAi.addEventListener('change', sync);
+  modeMan.addEventListener('change', sync);
+  sync();
+</script>
+<script src="/static/ai-loading.js" defer></script>
+{% endblock %}

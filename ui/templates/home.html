@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}首頁 · 八卦編年史{% endblock %}
+{% block body %}
+
+{# —— 歷史榜 —— #}
+<section class="card home-section" id="board-section" data-board>
+  <header class="section-head">
+    <div class="section-head-left">
+      <h2>歷史榜</h2>
+      {% if board %}
+      <button
+        type="button"
+        class="icon-btn eye-toggle"
+        data-eye-toggle
+        aria-pressed="false"
+        aria-label="顯示全名"
+        title="顯示／隱藏全名"
+      >
+        <svg class="eye-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/>
+          <circle cx="12" cy="12" r="2.75"/>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+    {% if board %}
+    <span class="section-meta">{{ board|length }} 人</span>
+    {% endif %}
+  </header>
+
+  {% if board %}
+  <ol class="rank-list" data-rank-list>
+    {% for r in board %}
+    <li class="rank-row{% if loop.index <= 3 %} rank-top{% endif %}">
+      <span class="rank-num" aria-label="第 {{ loop.index }} 名">{{ loop.index }}</span>
+      <div class="rank-main">
+        <span class="rank-nick">{{ r.display_nick }}</span>
+        {% if r.name and r.name != r.display_nick %}
+        <span class="rank-name" data-full-name data-real-name="{{ r.name }}">{{ '*' * (r.name|length) }}</span>
+        {% endif %}
+      </div>
+      <span class="score{% if r.history_score > 0 %} pos{% elif r.history_score < 0 %} neg{% endif %}">
+        {% if r.history_score > 0 %}+{% endif %}{{ r.history_score }}
+      </span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <div class="empty-state">
+    <p class="empty-title">尚無上榜人物</p>
+    <p class="muted">完成一則事件評分並落盤後，角色會出現在這裡。</p>
+  </div>
+  {% endif %}
+</section>
+
+{# —— 事件 —— #}
+<section class="card home-section">
+  <header class="section-head">
+    <h2>事件</h2>
+    {% if events %}
+    <span class="section-meta">{{ events|length }} 則</span>
+    {% endif %}
+  </header>
+
+  {% if events %}
+  <ul class="event-list">
+    {% for e in events %}
+    <li class="event-row">
+      <a class="event-hit" href="/events/{{ e.id }}">
+        <div class="event-badges">
+          {% if e.confirmed %}
+          <span class="badge ok">已落成</span>
+          {% else %}
+          <span class="badge draft">草稿</span>
+          {% endif %}
+          {% if e.is_sequel %}<span class="badge sequel">後續</span>{% endif %}
+        </div>
+        <div class="event-title">{{ e.title }}</div>
+      </a>
+      <div class="event-actions">
+        {% if not e.confirmed %}
+        <a class="btn ghost btn-sm" href="/events/{{ e.id }}/followup">繼續</a>
+        {% endif %}
+        <a class="event-chevron" href="/events/{{ e.id }}" aria-label="觀看">›</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty-state">
+    <p class="empty-title">尚無事件</p>
+    <p class="muted">從一則八卦開始，補全後成稿、評分落盤。</p>
+    <div class="actions empty-actions">
+      <a class="btn primary" href="/new">新增一則</a>
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<script src="/static/board-eye.js" defer></script>
+{% endblock %}

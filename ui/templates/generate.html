@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}AI 生成 · {{ list_title }}{% endblock %}
+{% block body %}
+<nav class="crumb">
+  <a href="/">首頁</a>
+  <span class="crumb-sep">/</span>
+  <a href="/events/{{ ev.id }}/followup">追問</a>
+  <span class="crumb-sep">/</span>
+  <span>AI 生成</span>
+</nav>
+
+{% if parent_title %}
+<p class="sequel-line">延續：{{ parent_title }}</p>
+{% endif %}
+{% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+
+{% if ready %}
+<section class="card story-card">
+  <header class="card-head">
+    <h2>成稿</h2>
+  </header>
+  <h3 class="story-title">{{ story.title or '（無標題）' }}</h3>
+  {% if story.time %}<p class="story-meta muted">{{ story.time }}</p>{% endif %}
+  {% if story.tags %}
+  <div class="tags">
+    {% for t in story.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+  </div>
+  {% endif %}
+  <div class="story-body">{{ story.body }}</div>
+</section>
+
+<section class="card score-card">
+  <header class="card-head">
+    <h2>此次評分</h2>
+    {% if scores %}<span class="section-meta">可微調</span>{% endif %}
+  </header>
+  <form method="post" action="/events/{{ ev.id }}/generate" id="score-form" data-ai-fetch="0">
+    <input type="hidden" name="action" value="confirm" />
+    {% if scores %}
+    <ul class="score-step-list">
+      {% for s in scores %}
+      <li class="score-step-row" data-score-row>
+        <div class="score-step-main">
+          <span class="score-step-name">{{ s.name }}</span>
+          {% if s.reason %}<span class="score-step-reason muted">{{ s.reason }}</span>{% endif %}
+        </div>
+        <div class="score-step-ctrl">
+          <button type="button" class="step-btn" data-step="-1" aria-label="減少">−</button>
+          <span class="step-val" data-step-val>{% if s.score is not none %}{% if s.score > 0 %}+{% endif %}{{ s.score }}{% else %}0{% endif %}</span>
+          <input type="hidden" name="score_{{ loop.index0 }}" value="{{ s.score if s.score is not none else 0 }}" data-score-input />
+          <input type="hidden" name="name_{{ loop.index0 }}" value="{{ s.name }}" />
+          <button type="button" class="step-btn" data-step="1" aria-label="增加">+</button>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    <input type="hidden" name="score_count" value="{{ scores|length }}" />
+    {% else %}
+    <p class="muted empty-inline">（無非本人角色可評，仍可落盤）</p>
+    <input type="hidden" name="score_count" value="0" />
+    {% endif %}
+    <div class="actions actions-end score-actions">
+      <a class="btn ghost" href="/events/{{ ev.id }}/generate?fresh=1">重新生成</a>
+      <button type="submit" class="primary">確認落盤</button>
+    </div>
+  </form>
+</section>
+<script src="/static/score-stepper.js" defer></script>
+
+{% else %}
+<section class="card generate-hero" id="generate-panel" data-event-id="{{ ev.id }}">
+  <header class="card-head">
+    <h2>AI 生成</h2>
+  </header>
+  <p class="generate-lead">將依主文與問答寫成完整故事，並自動評分；你可再微調分數後落盤。</p>
+
+  <div id="gen-wait" class="gen-wait{% if not job_running %} is-hidden{% endif %}" aria-live="polite">
+    <div class="spinner ai-wait-spinner" aria-hidden="true"></div>
+    <p class="ai-wait-title" id="gen-wait-title">AI 處理中</p>
+    <p class="ai-wait-hint" id="gen-wait-hint">
+      {% if job_phase == 'score' %}成稿完成，正在評分…{% else %}正在生成成稿…{% endif %}
+      <br/>請勿關閉此頁，完成後會自動進入成稿與評分。
+    </p>
+  </div>
+
+  <div id="gen-actions" class="actions actions-end{% if job_running %} is-hidden{% endif %}">
+    <button type="button" class="primary btn-ai" id="btn-ai-generate">
+      <span class="btn-label">AI 生成</span>
+      <span class="btn-spinner spinner" aria-hidden="true"></span>
+    </button>
+  </div>
+  <p class="hint" id="gen-hint">{% if not job_running %}點擊後在背景生成，通常需數十秒。{% endif %}</p>
+  <div id="gen-error" class="error is-hidden" role="alert"></div>
+</section>
+<script src="/static/generate-job.js" defer></script>
+{% endif %}
+{% endblock %}

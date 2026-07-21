@@ -1,0 +1,39 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# 本機使用者資料（勿上傳）
+data/characters.jsonl
+data/events.jsonl
+data/score_ledger.jsonl
+data/*.jsonl
+data/.pending_generate_*.json
+
+# 本機開發文件／素材（構想、進度、schema 草稿、截圖等）
+dev-local/
+
+# 設計參考大檔（.md 說明可進 git；圖／影片本機即可）
+design/references/**
+!design/references/.gitkeep
+design/palette/**
+!design/palette/.gitkeep
+design/typography/**
+!design/typography/.gitkeep
+# motion 片段：允許 .md 說明進庫；大檔／純 css 可本機
+design/motion/snippets/**
+!design/motion/snippets/.gitkeep
+!design/motion/snippets/*.md
+design/**/*.png
+design/**/*.jpg
+design/**/*.jpeg
+design/**/*.webp
+design/**/*.gif
+design/**/*.mp4
+design/**/*.mov
+design/**/*.psd
+design/**/*.fig
+design/**/*.sketch

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ list_title }} · 八卦編年史{% endblock %}
+{% block body %}
+<div class="event-toolbar">
+  <p class="muted" style="margin:0;">
+    <a href="/">← 回首頁</a>
+    {% if parent %}
+    · <a href="/events/{{ parent.id }}">← 延續自：{{ parent_title }}</a>
+    {% endif %}
+    {% if ev.status != 'confirmed' %}
+    · <a href="/events/{{ ev.id }}/followup">追問</a>
+    · <a href="/events/{{ ev.id }}/generate">AI 生成</a>
+    {% endif %}
+  </p>
+  {% if can_sequel %}
+  <a class="btn-plus" href="/events/{{ ev.id }}/sequel" title="後續">+</a>
+  {% endif %}
+</div>
+
+{% if is_reading and story %}
+<section class="card">
+  <h2>故事</h2>
+  <h3 style="margin:0 0 0.35rem;font-size:1.25rem;">{{ story.title or '（無標題）' }}</h3>
+  {% if story.time %}<p class="muted">時間：{{ story.time }}</p>{% endif %}
+  {% if story.tags %}
+  <div class="tags">
+    {% for t in story.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+  </div>
+  {% endif %}
+  <div class="story-body">{{ story.body }}</div>
+</section>
+
+<section class="card">
+  <h2>問答</h2>
+  {% if qa %}
+    {% for m in qa %}
+    <div class="qa-item">
+      <div class="qa-role {{ m.role }}">{% if m.role == 'assistant' %}AI{% else %}你{% endif %}</div>
+      <div>{{ m.content }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <p class="muted">（無問答）</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>此次評分</h2>
+  {% if score_mean is not none %}<p class="muted">本場平均：{{ score_mean }}</p>{% endif %}
+  {% if scores %}
+  <table>
+    <thead><tr><th>人物</th><th>當次分</th><th>理由</th></tr></thead>
+    <tbody>
+      {% for s in scores %}
+      <tr>
+        <td>{{ s.name }}</td>
+        <td class="score">{% if s.score is not none %}{% if s.score >= 0 %}+{% endif %}{{ s.score }}{% else %}—{% endif %}</td>
+        <td class="muted">{{ s.reason }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">（尚無當次分）</p>
+  {% endif %}
+</section>
+
+{% if children %}
+<section class="card">
+  <h2>後續</h2>
+  <ul class="sequel-list">
+    {% for c in children %}
+    <li>
+      <a href="/events/{{ c.id }}">{{ c.title }}</a>
+      {% if c.is_draft %}<span class="badge">草稿</span>{% else %}<span class="badge ok">已落成</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% else %}
+<section class="card">
+  <h2>進行中{% if ev.parent_event_id %} · 後續草稿{% endif %}</h2>
+  <p>狀態：<span class="badge">{{ ev.status }}</span></p>
+  {% if parent %}
+  <p class="sequel-line">延續：<a href="/events/{{ parent.id }}">{{ parent_title }}</a></p>
+  {% endif %}
+  {% if ev.user_title and not ev.title_deferred %}
+  <p class="muted">標題：{{ ev.user_title }}</p>
+  {% endif %}
+  <p class="muted">主文預覽：{{ (ev.user_main_text or '')[:200] }}{% if (ev.user_main_text or '')|length > 200 %}…{% endif %}</p>
+  <div class="actions">
+    <a class="btn primary" href="/events/{{ ev.id }}/followup">繼續追問</a>
+    <a class="btn" href="/events/{{ ev.id }}/generate">AI 生成</a>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

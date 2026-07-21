@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}追問 · {{ list_title }}{% endblock %}
+{% block body %}
+<nav class="crumb">
+  <a href="/">首頁</a>
+  <span class="crumb-sep">/</span>
+  <a href="/events/{{ ev.id }}">事件</a>
+  <span class="crumb-sep">/</span>
+  <span>追問</span>
+</nav>
+
+{% if parent_title %}
+<p class="sequel-line">延續：{{ parent_title }}</p>
+{% endif %}
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<section class="card followup-card">
+  <header class="card-head">
+    <h2>{% if ready_complete %}補充確認{% else %}AI 追問{% endif %}</h2>
+  </header>
+
+  {# 問題顯示框：後端 display_question + 模板 qa 備援 + JS 補洞 #}
+  <div
+    class="question-box{% if ready_complete %} is-complete{% endif %}"
+    id="ai-question"
+  >
+    <div class="question-label">{% if ready_complete %}狀態{% else %}本輪問題{% endif %}</div>
+    <p class="question-text" id="ai-question-text">
+{%- if display_question -%}
+{{ display_question }}
+{%- else -%}
+{%- set last_ai = namespace(t='') -%}
+{%- for m in (ev.qa_thread or [])|reverse -%}
+{%- if not last_ai.t and m.role == 'assistant' and m.content -%}
+{%- set last_ai.t = m.content -%}
+{%- endif -%}
+{%- endfor -%}
+{%- if last_ai.t -%}
+{{ last_ai.t }}
+{%- else -%}
+（尚無問題）
+{%- endif -%}
+{%- endif -%}
+    </p>
+  </div>
+
+  <form method="post" action="/events/{{ ev.id }}/followup" data-ai-form class="followup-form">
+    <label for="answer">你的回答</label>
+    <textarea id="answer" name="answer" rows="5" placeholder="{% if ready_complete %}若有補充請寫下；沒有可直接「到此為止」…{% else %}回答本題…{% endif %}"></textarea>
+    <div class="actions actions-end">
+      {% if not ready_complete %}
+      <button type="submit" name="action" value="answer" class="primary btn-ai" data-ai-submit>
+        <span class="btn-label">送出回答</span>
+        <span class="btn-spinner spinner" aria-hidden="true"></span>
+      </button>
+      <button type="submit" name="action" value="skip" class="ghost">跳過</button>
+      {% else %}
+      <button type="submit" name="action" value="answer" class="btn btn-ai" data-ai-submit>
+        <span class="btn-label">送出補充</span>
+        <span class="btn-spinner spinner" aria-hidden="true"></span>
+      </button>
+      {% endif %}
+      <button type="submit" name="action" value="done" class="{% if ready_complete %}primary{% else %}danger{% endif %}">到此為止</button>
+    </div>
+  </form>
+</section>
+
+{% if ev.qa_thread %}
+<section class="card">
+  <header class="card-head">
+    <h2>目前問答</h2>
+    <span class="section-meta">{{ ev.qa_thread|length }} 則</span>
+  </header>
+  <div class="qa-thread" id="qa-thread">
+    {% for m in ev.qa_thread %}
+    <div class="qa-item" data-role="{{ m.role }}">
+      <div class="qa-role {{ m.role }}">{% if m.role == 'assistant' %}AI{% else %}你{% endif %}</div>
+      <div class="qa-content">{{ m.content }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<script>
+(function () {
+  var el = document.getElementById("ai-question-text");
+  if (!el) return;
+  var t = (el.textContent || "").trim();
+  var empty =
+    !t ||
+    t === "（尚無問題）" ||
+    t === "（尚無問題，可稍後重試）";
+  if (!empty) return;
+  var nodes = document.querySelectorAll(
+    "#qa-thread .qa-item[data-role='assistant'] .qa-content"
+  );
+  if (!nodes.length) return;
+  var text = (nodes[nodes.length - 1].textContent || "").trim();
+  if (text) el.textContent = text;
+})();
+</script>
+<script src="/static/ai-loading.js" defer></script>
+{% endblock %}

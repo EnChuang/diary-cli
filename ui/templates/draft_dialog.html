@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}進行中的草稿{% endblock %}
+{% block body %}
+<section class="card">
+  <h2>你有一篇未完成的草稿</h2>
+  <p class="muted">全庫同時只保留一份草稿。請選擇繼續寫，或放棄後再開始{% if intent == 'sequel' %}這則後續{% else %}新事件{% endif %}。</p>
+  <p><strong>{{ draft_title }}</strong></p>
+  <p class="muted">id：{{ draft.id }} · 狀態：{{ draft.status }}</p>
+  <form method="post" action="/draft/resolve">
+    <input type="hidden" name="intent" value="{{ intent }}" />
+    <input type="hidden" name="parent_id" value="{{ parent_id }}" />
+    <div class="actions">
+      <button type="submit" name="action" value="continue" class="primary">繼續寫草稿</button>
+      <button type="submit" name="action" value="abandon" class="danger">放棄草稿，開新的</button>
+      <a class="btn ghost" href="/">取消</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
