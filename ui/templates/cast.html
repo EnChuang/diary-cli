@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}確認出場 · {{ list_title }} · 野史錄{% endblock %}
+{% block body %}
+<nav class="crumb">
+  <a href="/">首頁</a>
+  <span class="crumb-sep">/</span>
+  <a href="/events/{{ ev.id }}">事件</a>
+  <span class="crumb-sep">/</span>
+  <span>確認出場</span>
+</nav>
+
+{% if parent_title %}
+<p class="sequel-line">延續：{{ parent_title }}</p>
+{% endif %}
+{% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+
+<section class="card cast-card">
+  <header class="card-head">
+    <h2>確認出場人物</h2>
+  </header>
+  <p class="cast-lead">
+    AI 已從初稿列出可能出場者。請在追問前確認：
+    <strong>職稱、泛稱不要當人名</strong>（例如「主管」→ 刪除，或改成真實姓名）。
+    確認後才進入 AI 追問。
+  </p>
+
+  <form method="post" action="/events/{{ ev.id }}/cast" id="cast-form" data-ai-fetch="0">
+    <ul class="cast-list" id="cast-list">
+      {% for r in cast_rows %}
+      <li class="cast-row{% if r.likely_role %} is-warn{% endif %}" data-cast-row>
+        <div class="cast-row-main">
+          <label class="cast-name-label">
+            <span class="cast-field-label">姓名</span>
+            <input
+              type="text"
+              name="name_{{ loop.index0 }}"
+              value="{{ r.temp_name }}"
+              placeholder="真實姓名或暱稱"
+              autocomplete="off"
+            />
+          </label>
+          {% if r.likely_role %}
+          <p class="cast-warn">疑似職稱／泛稱，建議刪除或改成具體人名</p>
+          {% endif %}
+          <div class="cast-flags">
+            <label class="cast-check">
+              <input type="checkbox" name="user_{{ loop.index0 }}" value="1"{% if r.is_user %} checked{% endif %} />
+              是我本人（不列入評分）
+            </label>
+            <label class="cast-check cast-drop">
+              <input type="checkbox" name="drop_{{ loop.index0 }}" value="1" />
+              刪除（不是可評角色）
+            </label>
+          </div>
+        </div>
+      </li>
+      {% else %}
+      <li class="cast-row" data-cast-row>
+        <div class="cast-row-main">
+          <label class="cast-name-label">
+            <span class="cast-field-label">姓名</span>
+            <input type="text" name="name_0" value="" placeholder="真實姓名或暱稱" autocomplete="off" />
+          </label>
+          <div class="cast-flags">
+            <label class="cast-check">
+              <input type="checkbox" name="user_0" value="1" />
+              是我本人（不列入評分）
+            </label>
+            <label class="cast-check cast-drop">
+              <input type="checkbox" name="drop_0" value="1" />
+              刪除
+            </label>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    <input type="hidden" name="count" id="cast-count" value="{{ cast_rows|length if cast_rows else 1 }}" />
+
+    <div class="actions actions-between">
+      <button type="button" class="btn ghost" id="cast-add">＋ 新增人物</button>
+      <button type="submit" class="primary">確認並開始追問</button>
+    </div>
+    <p class="hint">刪除職稱誤認（如「主管」）可避免成稿變成「小主管」這類暱稱。</p>
+  </form>
+  <div class="flow-abandon">
+    {% include "partials/abandon_event.html" %}
+  </div>
+</section>
+
+<template id="cast-row-tpl">
+  <li class="cast-row" data-cast-row>
+    <div class="cast-row-main">
+      <label class="cast-name-label">
+        <span class="cast-field-label">姓名</span>
+        <input type="text" name="name_IDX" value="" placeholder="真實姓名或暱稱" autocomplete="off" />
+      </label>
+      <div class="cast-flags">
+        <label class="cast-check">
+          <input type="checkbox" name="user_IDX" value="1" />
+          是我本人（不列入評分）
+        </label>
+        <label class="cast-check cast-drop">
+          <input type="checkbox" name="drop_IDX" value="1" />
+          刪除
+        </label>
+      </div>
+    </div>
+  </li>
+</template>
+
+<script src="/static/cast-edit.js" defer></script>
+{% endblock %}

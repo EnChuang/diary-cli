@@ -1,0 +1,13 @@
+{# 刪除本篇（有後續則連刪子孫）。context: ev, child_count (optional int), btn_sm #}
+{% set n_kids = child_count if child_count is defined else 0 %}
+<form
+  method="post"
+  action="/events/{{ ev.id }}/delete"
+  class="delete-event-form"
+  data-child-count="{{ n_kids }}"
+  onsubmit="var n=parseInt(this.getAttribute('data-child-count')||'0',10);var m=n>0?('確定刪除此篇及全部 '+n+' 則後續？評分流水會移除並重算歷史榜，無法復原。'):('確定刪除此篇？已落盤的分數會自歷史榜重算移除，無法復原。');return confirm(m);"
+>
+  <button type="submit" class="btn danger{% if btn_sm|default(false) %} btn-sm{% endif %}" title="刪除本篇{% if n_kids and n_kids > 0 %}（含後續）{% endif %}">
+    刪除
+  </button>
+</form>

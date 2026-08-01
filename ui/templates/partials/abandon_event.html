@@ -1,0 +1,9 @@
+{# 未落盤事件：放棄並刪除。需 context: ev #}
+<form
+  method="post"
+  action="/events/{{ ev.id }}/abandon"
+  class="abandon-form"
+  onsubmit="return confirm('確定放棄並刪除此事件？未落盤內容將清除，無法復原。');"
+>
+  <button type="submit" class="btn danger" title="刪除此次未落盤事件">放棄</button>
+</form>

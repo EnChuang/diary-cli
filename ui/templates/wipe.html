@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}一鍵銷毀 · 野史錄{% endblock %}
+{% block body %}
+<nav class="crumb">
+  <a href="/">首頁</a>
+  <span class="crumb-sep">/</span>
+  <span>一鍵銷毀</span>
+</nav>
+
+<section class="card wipe-card">
+  <header class="card-head">
+    <h2>一鍵銷毀</h2>
+  </header>
+  <p class="wipe-lead">
+    銷毀本機<strong>所有事件、人物、評分流水</strong>與生成暫存，回到完全空白。
+    <strong>無法復原。</strong>不會刪除 API 金鑰（.env）與程式。
+  </p>
+  {% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+
+  <div class="actions">
+    <a class="btn ghost" href="/">返回</a>
+    <button type="button" class="btn danger" id="btn-open-wipe-modal" data-open-wipe>
+      一鍵銷毀
+    </button>
+  </div>
+</section>
+
+{# 已清空提示 #}
+<div
+  class="wipe-modal"
+  id="wipe-empty-modal"
+  {% if not show_empty_hint|default(false) %}hidden{% endif %}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="wipe-empty-title"
+  data-already-empty="{{ '1' if already_empty else '0' }}"
+>
+  <div class="wipe-modal-scrim" data-close-empty aria-hidden="true"></div>
+  <div class="wipe-modal-panel glass-panel">
+    <h3 id="wipe-empty-title" class="wipe-modal-title">目前已清空</h3>
+    <p class="wipe-modal-body">
+      本機尚無事件、人物或評分紀錄，無需再銷毀。
+    </p>
+    <div class="actions actions-end">
+      <button type="button" class="btn primary" data-close-empty>知道了</button>
+    </div>
+  </div>
+</div>
+
+{# 確認銷毀框（有資料時） #}
+<div
+  class="wipe-modal"
+  id="wipe-modal"
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="wipe-modal-title"
+>
+  <div class="wipe-modal-scrim" data-close-wipe aria-hidden="true"></div>
+  <div class="wipe-modal-panel glass-panel">
+    <h3 id="wipe-modal-title" class="wipe-modal-title">確定一鍵銷毀？</h3>
+    <p class="wipe-modal-body">
+      將永久刪除本機全部野史資料（事件／人物／分數），無法復原。
+    </p>
+    <form method="post" action="/settings/wipe" id="wipe-form" data-ai-fetch="0">
+      <input type="hidden" name="confirm" value="1" />
+      <div class="actions actions-end">
+        <button type="button" class="btn ghost" data-close-wipe>取消</button>
+        <button type="submit" class="btn danger">確認銷毀</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/static/wipe-confirm.js" defer></script>
+{% endblock %}

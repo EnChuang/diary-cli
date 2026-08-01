@@ -391,21 +391,160 @@ def count_children(parent_event_id: str, path: Path = DEFAULT_PATH) -> int:
     return len(list_children(parent_event_id, path))
 
 
+def list_subtree_ids(event_id: str, path: Path = DEFAULT_PATH) -> list[str]:
+    """
+    本篇 id + 所有子孫後續（任意深度）。
+    刪子篇時不會包含父；刪父時包含全部子／孫。
+    """
+    eid = event_id.strip()
+    rows = load_events(path)
+    by_parent: dict[str, list[str]] = {}
+    ids_present: set[str] = set()
+    for r in rows:
+        rid = r["id"]
+        ids_present.add(rid)
+        pid = r.get("parent_event_id")
+        if pid:
+            by_parent.setdefault(str(pid).strip(), []).append(rid)
+    if eid not in ids_present:
+        return []
+    out: list[str] = []
+    stack = [eid]
+    seen: set[str] = set()
+    while stack:
+        cur = stack.pop()
+        if cur in seen:
+            continue
+        seen.add(cur)
+        out.append(cur)
+        for child in by_parent.get(cur, []):
+            stack.append(child)
+    return out
+
+
+def delete_event_tree(
+    event_id: str,
+    *,
+    path: Path = DEFAULT_PATH,
+    recompute_scores: bool = True,
+) -> dict[str, Any]:
+    """
+    刪除本篇及全部子孫後續；清除對應 ledger；可選重算人物歷史分。
+    不刪父篇。回傳摘要。
+    """
+    from storage.confirm import recompute_history_scores
+    from storage.ledger import load_ledger, save_ledger
+    from storage.paths import LEDGER_PATH
+
+    eid = event_id.strip()
+    ev = get_event(eid, path)
+    if ev is None:
+        raise KeyError(f"找不到事件：{eid}")
+
+    to_delete = set(list_subtree_ids(eid, path))
+    if not to_delete:
+        raise KeyError(f"找不到事件：{eid}")
+
+    rows = [r for r in load_events(path) if r["id"] not in to_delete]
+    save_events(rows, path)
+
+    led_path = LEDGER_PATH
+    led_before = load_ledger(led_path)
+    led_after = [r for r in led_before if r["event_id"] not in to_delete]
+    removed_led = len(led_before) - len(led_after)
+    if removed_led or len(led_after) != len(led_before):
+        save_ledger(led_after, led_path)
+
+    if recompute_scores:
+        try:
+            recompute_history_scores()
+        except Exception:
+            # 事件與 ledger 已刪；重算失敗不阻擋刪除結果
+            pass
+
+    return {
+        "root_id": eid,
+        "deleted_ids": sorted(to_delete),
+        "deleted_count": len(to_delete),
+        "ledger_rows_removed": removed_led,
+        "had_children": len(to_delete) > 1,
+    }
+
+
 def delete_draft_event(event_id: str, path: Path = DEFAULT_PATH) -> None:
-    """刪除未 confirmed 草稿；有子篇或已 confirmed 則拒絕。"""
+    """刪除未 confirmed 草稿（含其子孫草稿／篇章）；已 confirmed 根則拒絕。"""
     ev = get_event(event_id, path)
     if ev is None:
         raise KeyError(f"找不到事件：{event_id}")
     if ev.get("status") == "confirmed":
-        raise ValueError("不可刪除已落成事件（第一版）")
-    if count_children(event_id, path) > 0:
-        raise ValueError("不可刪除仍有後續的事件")
-    rows = [r for r in load_events(path) if r["id"] != event_id.strip()]
-    save_events(rows, path)
+        raise ValueError("不可刪除已落成事件（請用事件刪除）")
+    delete_event_tree(event_id, path=path, recompute_scores=True)
+
+
+CAST_OK_MARK = "cast_ok=1"
+
+# 常見職稱／泛稱：初稿常誤當人名（UI 確認出場時可提示）
+LIKELY_ROLE_LABELS = frozenset(
+    {
+        "主管",
+        "老板",
+        "老闆",
+        "上司",
+        "經理",
+        "總監",
+        "同事",
+        "朋友",
+        "同學",
+        "某人",
+        "大家",
+        "眾人",
+        "路人",
+        "客戶",
+        "老闆娘",
+    }
+)
+
+
+def is_cast_confirmed(ev: dict[str, Any]) -> bool:
+    notes = ev.get("notes") or ""
+    return CAST_OK_MARK in notes
+
+
+def needs_cast_confirm(ev: dict[str, Any]) -> bool:
+    """
+    建立後、追問前須確認出場人名。
+    已有問答／成稿／awaiting_generate 的舊草稿不強制回退。
+    """
+    if ev.get("status") == "confirmed":
+        return False
+    if is_cast_confirmed(ev):
+        return False
+    if ev.get("qa_thread"):
+        return False
+    if ev.get("status") == "awaiting_generate":
+        return False
+    story = ev.get("story")
+    if isinstance(story, dict) and (story.get("body") or "").strip():
+        return False
+    return True
+
+
+def mark_cast_confirmed(
+    event_id: str, *, path: Path = DEFAULT_PATH
+) -> dict[str, Any]:
+    row = get_event(event_id, path)
+    if row is None:
+        raise KeyError(f"找不到事件：{event_id}")
+    notes = (row.get("notes") or "").strip()
+    if CAST_OK_MARK not in notes:
+        row["notes"] = f"{notes}; {CAST_OK_MARK}".strip("; ").strip()
+        row["updated_at"] = _now_iso()
+        return upsert_event(row, path)
+    return row
 
 
 def resume_step_for_event(ev: dict[str, Any]) -> str:
-    """回傳建議繼續的步驟：followup | generate | score | detail。"""
+    """回傳建議繼續的步驟：cast | followup | generate | score | detail。"""
     if ev.get("status") == "confirmed":
         return "detail"
     story = ev.get("story")
@@ -413,6 +552,8 @@ def resume_step_for_event(ev: dict[str, Any]) -> str:
         return "score"
     if ev.get("status") == "awaiting_generate":
         return "generate"
+    if needs_cast_confirm(ev):
+        return "cast"
     return "followup"
 
 

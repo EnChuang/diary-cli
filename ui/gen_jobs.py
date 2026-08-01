@@ -104,3 +104,8 @@ def start_generate_job(event_id: str) -> dict[str, Any]:
 def clear_job(event_id: str) -> None:
     with _lock:
         _JOBS.pop(event_id, None)
+
+
+def clear_all_jobs() -> None:
+    with _lock:
+        _JOBS.clear()

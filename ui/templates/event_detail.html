@@ -12,9 +12,12 @@
     · <a href="/events/{{ ev.id }}/generate">AI 生成</a>
     {% endif %}
   </p>
-  {% if can_sequel %}
-  <a class="btn-plus" href="/events/{{ ev.id }}/sequel" title="後續">+</a>
-  {% endif %}
+  <div class="event-toolbar-actions">
+    {% include "partials/delete_event.html" %}
+    {% if can_sequel %}
+    <a class="btn-plus" href="/events/{{ ev.id }}/sequel" title="後續">+</a>
+    {% endif %}
+  </div>
 </div>
 
 {% if is_reading and story %}
@@ -49,7 +52,7 @@
   {% if score_mean is not none %}<p class="muted">本場平均：{{ score_mean }}</p>{% endif %}
   {% if scores %}
   <table>
-    <thead><tr><th>人物</th><th>當次分</th><th>理由</th></tr></thead>
+    <thead><tr><th>人物</th><th>當次分數</th><th>理由</th></tr></thead>
     <tbody>
       {% for s in scores %}
       <tr>
@@ -61,7 +64,7 @@
     </tbody>
   </table>
   {% else %}
-  <p class="muted">（尚無當次分）</p>
+  <p class="muted">（尚無當次分數）</p>
   {% endif %}
 </section>
 
@@ -90,9 +93,12 @@
   <p class="muted">標題：{{ ev.user_title }}</p>
   {% endif %}
   <p class="muted">主文預覽：{{ (ev.user_main_text or '')[:200] }}{% if (ev.user_main_text or '')|length > 200 %}…{% endif %}</p>
-  <div class="actions">
-    <a class="btn primary" href="/events/{{ ev.id }}/followup">繼續追問</a>
-    <a class="btn" href="/events/{{ ev.id }}/generate">AI 生成</a>
+  <div class="actions actions-between">
+    {% include "partials/abandon_event.html" %}
+    <div class="actions">
+      <a class="btn primary" href="/events/{{ ev.id }}/followup">繼續追問</a>
+      <a class="btn" href="/events/{{ ev.id }}/generate">AI 生成</a>
+    </div>
   </div>
 </section>
 {% endif %}

@@ -3,7 +3,7 @@
 > **本檔角色**：設計資料夾的**權威說明**（放什麼、怎麼命名、怎麼交給 AI、與 `ui/` 的關係）。  
 > **產品進度／下一步**：見 [`dev-local/SESSION.md`](../dev-local/SESSION.md)  
 > **使用測試**：見根目錄 [`USAGE.md`](../USAGE.md)  
-> **更新日期**：2026-07-19  
+> **更新日期**：2026-08-01  
 
 ---
 
@@ -26,15 +26,19 @@ UI 程式在 **`ui/`**（FastAPI + 模板 + `ui/static/style.css`）。
 design/
 ├── README.md                 ← 本檔（素材規範 + 工程紀錄）
 ├── notes.md
-├── ui-discuss/               ← 【UI 分階段討論】00～07
+├── ui-discuss/               ← 【UI 分階段討論】00～10
 │   ├── README.md             ← 階段索引
 │   └── 00-global.md …
+├── scoring/                  ← 【評分核心】可重現的觀感分標準（計畫／校準／金標）
+│   └── 00-score-core-plan.md
 ├── styles/                   ← 設計語言／Skill（如 apple-design）
 ├── motion/                   ← CSS／動效
 ├── references/               ← 截圖
 ├── palette/
 └── typography/
 ```
+
+**評分哲學／長版 skill 升級**：見 [`scoring/00-score-core-plan.md`](./scoring/00-score-core-plan.md)（執行規則仍在 `skill/story_score.md`）。
 
 **改某個畫面**：開 `ui-discuss/` 對應階段檔討論 → 再改 `ui/`。
 

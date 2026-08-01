@@ -1,8 +1,23 @@
 # 野史錄 · Yes Log — 測試使用說明與規則
 
 > 給**你自己實測**用。產品構想細節見 `dev-local/`（不上傳 Git）。  
-> 更新：2026-07-19  
-> **開發進度／總體檢／下一步**：`dev-local/SESSION.md`（接續開工必讀）
+> 更新：2026-08-01  
+> **開發進度／下一步**：`dev-local/SESSION.md` · 根目錄 [`TODO.md`](./TODO.md)  
+> **評分長線計畫**：[`design/scoring/00-score-core-plan.md`](./design/scoring/00-score-core-plan.md)
+
+---
+
+## 0. 這專案在做什麼
+
+把你經歷的八卦／職場小事寫成**可讀短篇（野史）**，並對**出場的他人**記下**你當下的主觀分數**（歷史榜）。  
+AI 協助補問、成稿、建議分；**你確認後**才寫進本機資料。  
+**不是**日記 App；**不是**客觀道德打分（哭／受害者 ≠ 自動高分）。
+
+主路徑：
+
+```text
+主文 → 初稿 → 確認出場 → 追問 → 成稿 → 調分／改評語 → 落盤 → 歷史榜
+```
 
 ---
 
@@ -10,47 +25,20 @@
 
 ```text
 diary-cli/
-├── USAGE.md                 ← 本檔（測試用法與規則）
-├── README.md                ← 安裝與快速入口
-├── AGENTS.md                ← 給 AI Agent 交接
-│
-├── gossip.py                ← 【主入口】完整流程
-├── story_draft.py           ← 僅初稿
-├── story_followup.py        ← 僅追問
-├── story_generate.py        ← 僅成稿
-├── story_score.py           ← 僅評分／落盤
-├── board.py                 ← 榜單與閱讀
-│
-├── llm_client.py            ← ModelArk 呼叫 + JSON 重試
-├── text_zh.py               ← 繁體轉換
-│
-├── skill/                   ← AI 規則（改文筆改這裡）
-│   ├── story_draft.md
-│   ├── story_followup.md
-│   ├── story_generate.md
-│   └── story_score.md
-│
-├── storage/                 ← 本地讀寫（無 AI）
-│   ├── paths.py
-│   ├── characters.py
-│   ├── events.py
-│   ├── ledger.py
-│   ├── scoring.py           ← 平均 ±10
-│   ├── confirm.py           ← 確認落盤
-│   └── merge.py             ← 角色合併
-│
-├── data/                    ← 你的真實資料（gitignore）
-│   ├── characters.jsonl
-│   ├── events.jsonl
-│   └── score_ledger.jsonl
-│
-├── dev-local/               ← 構想／契約／進度（gitignore）
-├── .env                     ← 金鑰（勿提交）
-├── .env.example
-└── requirements.txt
+├── USAGE.md · README.md · AGENTS.md · TODO.md
+├── gossip.py · story_*.py · board.py
+├── llm_client.py · text_zh.py · run_ui.ps1
+├── skill/                   ← AI 規則（改文筆／評分優先改這裡）
+├── storage/                 ← jsonl、±10、落盤、刪除、merge
+├── ui/                      ← Web UI（FastAPI + 模板 + static）
+├── design/                  ← 素材、ui-discuss/、scoring/
+├── data/                    ← 真實資料（gitignore）
+├── dev-local/               ← SESSION／契約／scratch 煙測（gitignore）
+├── .env · .env.example · requirements.txt
 ```
 
-**已退役（勿再找）**：`main.py`、日記 Skill、`diary.jsonl`。
+**已退役（勿再找）**：`main.py`、日記 Skill、`diary.jsonl`。  
+**勿隨意搬移** `ui/`、`storage/`、`skill/`（import 與模板路徑相依）。
 
 ---
 
@@ -77,39 +65,31 @@ cd C:\DATA\A_Developement\Project\diary-cli
 
 ## 3. 怎麼測（建議順序）
 
-### 方式 0 — 本機網頁 UI（Phase I 起步）
+### 方式 0 — 本機網頁 UI（建議主用）
 
 ```powershell
 cd C:\DATA\A_Developement\Project\diary-cli
 .\.venv\Scripts\activate
-uvicorn ui.app:app --reload --host 127.0.0.1 --port 8765 --reload-dir ui --reload-dir storage --reload-dir skill
+# 測 AI 建議用 -NoReload（避免熱重載掐斷長請求）
+.\run_ui.ps1 -NoReload
+# 改前端熱重載：.\run_ui.ps1
 ```
 
 開瀏覽器：`http://127.0.0.1:8765`
 
 | 頁面 | 功能 |
 |------|------|
-| 首頁 | 歷史榜 + 事件列表（點「觀看」） |
-| 新增事件 | 標題手填／交給 AI + 主文 → 初稿 |
-| 追問 | 回答 / **跳過** / 到此為止 |
-| 成稿／評分 | 預覽確認 → 建議分 → 落盤 |
-| 已落成觀看 | **成稿 + 問答 + 此次評分**（D21）；右上角 **+**＝後續 |
-| 後續（D23） | 已落成頁按 **+** → 寫新發展（帶父篇回憶）→ 同主流程 → 落盤 |
-| 草稿（D24） | 全庫 **1 份**；點「新增」或「後續」時若有草稿 → 繼續／放棄（冷啟動不彈） |
+| 首頁 | 歷史榜（眼睛顯全名）+ 事件列表；防窺滑動解鎖 |
+| 新增／後續 | 標題手填／交給 AI + 主文 → 初稿 |
+| 確認出場 | 人名確認／刪職稱誤認 → 再追問 |
+| 追問 | 回答 / **跳過**（有 loading；無下一問會提示到此為止）/ 到此為止 |
+| 成稿／評分 | 背景生成；**調分 + 改評語** → 落盤 |
+| 事件詳情 | 成稿 + 問答 + **當次分數**；工具列 **刪除**（父連刪後續、重算榜、回首頁）；**+**＝後續 |
+| 草稿 | 全庫 **1 份**；新增／後續時若有草稿 → 繼續／放棄 |
+| 頁腳 | 一鍵銷毀本機資料（不刪 .env） |
 
-**設計參考（工程紀錄）**：完整規範與素材清冊 → [`design/README.md`](design/README.md)  
-
-| 放什麼 | 路徑 |
-|--------|------|
-| 風格 Skill（如 Apple） | `design/styles/<名>/SKILL.md` |
-| 截圖 | `design/references/` |
-| CSS 動畫 | `design/motion/snippets/` 或 `motion/links.md` |
-| 你的偏好 | `design/notes.md` |
-
-樣式實作檔：`ui/static/style.css`（中性深色起步，依 design 再調）。  
-
-**分階段 UI 討論**（提高效率）：[`design/ui-discuss/README.md`](design/ui-discuss/README.md)  
-例：只改追問 → 開 `design/ui-discuss/03-followup.md` 再改 `ui/`。
+**設計**：[`design/README.md`](design/README.md) · **分階段 UI**：[`design/ui-discuss/`](design/ui-discuss/) · **評分計畫**：[`design/scoring/`](design/scoring/)  
+樣式實作：`ui/static/style.css`。
 
 ### 方式 A — CLI 一條龍
 

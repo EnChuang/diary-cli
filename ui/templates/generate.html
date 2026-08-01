@@ -32,8 +32,9 @@
 <section class="card score-card">
   <header class="card-head">
     <h2>此次評分</h2>
-    {% if scores %}<span class="section-meta">可微調</span>{% endif %}
+    {% if scores %}<span class="section-meta">分數與評語可改</span>{% endif %}
   </header>
+  <p class="score-edit-hint muted">AI 建議僅供參考；請依你的真實觀感調整分數與評語後再落盤。</p>
   <form method="post" action="/events/{{ ev.id }}/generate" id="score-form" data-ai-fetch="0">
     <input type="hidden" name="action" value="confirm" />
     {% if scores %}
@@ -42,7 +43,16 @@
       <li class="score-step-row" data-score-row>
         <div class="score-step-main">
           <span class="score-step-name">{{ s.name }}</span>
-          {% if s.reason %}<span class="score-step-reason muted">{{ s.reason }}</span>{% endif %}
+          <label class="score-reason-label">
+            <span class="visually-hidden">評語 · {{ s.name }}</span>
+            <textarea
+              class="score-step-reason-input"
+              name="reason_{{ loop.index0 }}"
+              rows="2"
+              maxlength="500"
+              placeholder="為什麼是這個分數？（可改 AI 評語）"
+            >{{ s.reason or '' }}</textarea>
+          </label>
         </div>
         <div class="score-step-ctrl">
           <button type="button" class="step-btn" data-step="-1" aria-label="減少">−</button>
@@ -64,6 +74,9 @@
       <button type="submit" class="primary">確認落盤</button>
     </div>
   </form>
+  <div class="flow-abandon">
+    {% include "partials/abandon_event.html" %}
+  </div>
 </section>
 <script src="/static/score-stepper.js" defer></script>
 
@@ -91,7 +104,10 @@
   </div>
   <p class="hint" id="gen-hint">{% if not job_running %}點擊後在背景生成，通常需數十秒。{% endif %}</p>
   <div id="gen-error" class="error is-hidden" role="alert"></div>
+  <div class="flow-abandon{% if job_running %} is-hidden{% endif %}" id="gen-abandon">
+    {% include "partials/abandon_event.html" %}
+  </div>
 </section>
-<script src="/static/generate-job.js" defer></script>
+<script src="/static/generate-job.js?v=no-reload-loop" defer></script>
 {% endif %}
 {% endblock %}

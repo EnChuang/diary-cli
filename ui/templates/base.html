@@ -20,7 +20,7 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/static/style.css?v=sequel-dark1" />
+  <link rel="stylesheet" href="/static/style.css?v=wipe2" />
   {% if page == 'home' %}
   <script>
     /* 首頁防窺：
@@ -155,7 +155,9 @@
   <div class="wrap" id="app-main">
     {% block body %}{% endblock %}
     <footer class="note">
-      本機 UI · 00-global + 01-home · 素材 <code>design/</code>
+      <span class="footer-meta">本機 · 野史錄 Yes Log</span>
+      {# 低調：不醒目的重置入口 #}
+      <a class="footer-wipe" href="/settings/wipe" title="一鍵銷毀本機全部資料">一鍵銷毀</a>
     </footer>
   </div>
 
@@ -199,5 +201,19 @@
 
   <script src="/static/theme-toggle.js" defer></script>
   <script src="/static/seg-nav.js" defer></script>
+  <script>
+    /* 清除資料後：清掉解鎖／主題以外的 session 旗標（主題可保留） */
+    (function () {
+      try {
+        if (/[?&]wiped=1(?:&|$)/.test(location.search)) {
+          sessionStorage.removeItem("diary-cli-unlocked");
+          sessionStorage.removeItem("diary-cli-board-show-names");
+          if (history.replaceState) {
+            history.replaceState(null, "", location.pathname);
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
 </body>
 </html>

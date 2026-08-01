@@ -21,12 +21,12 @@
     <label>{% if is_sequel %}後續發展{% else %}主文{% endif %}</label>
     <textarea name="main_text" required placeholder="{% if is_sequel %}後來又發生了什麼…{% else %}描述發生了什麼…{% endif %}"></textarea>
 
-    <div class="actions">
+    <div class="actions actions-between">
+      <a class="btn danger" href="{% if is_sequel %}/events/{{ parent_id }}{% else %}/{% endif %}">放棄</a>
       <button type="submit" class="primary btn-ai" data-ai-submit>
         <span class="btn-label">建立</span>
         <span class="btn-spinner spinner" aria-hidden="true"></span>
       </button>
-      <a class="btn ghost" href="{% if is_sequel %}/events/{{ parent_id }}{% else %}/{% endif %}">取消</a>
     </div>
     <p class="hint">可能需數十秒。</p>
   </form>
@@ -43,5 +43,5 @@
   modeMan.addEventListener('change', sync);
   sync();
 </script>
-<script src="/static/ai-loading.js" defer></script>
+<script src="/static/ai-loading.js?v=action-url-fix" defer></script>
 {% endblock %}

@@ -13,11 +13,14 @@
   var titleEl = document.getElementById("gen-wait-title");
   var hintEl = document.getElementById("gen-wait-hint");
   var errEl = document.getElementById("gen-error");
+  var abandon = document.getElementById("gen-abandon");
   var pollTimer = null;
+  var navigated = false;
 
   function showWait(phase) {
     if (wait) wait.classList.remove("is-hidden");
     if (actions) actions.classList.add("is-hidden");
+    if (abandon) abandon.classList.add("is-hidden");
     if (btn) btn.classList.add("is-loading");
     if (titleEl) titleEl.textContent = "AI 處理中";
     if (hintEl) {
@@ -32,6 +35,7 @@
   function showIdle() {
     if (wait) wait.classList.add("is-hidden");
     if (actions) actions.classList.remove("is-hidden");
+    if (abandon) abandon.classList.remove("is-hidden");
     if (btn) {
       btn.classList.remove("is-loading");
       btn.disabled = false;
@@ -46,7 +50,20 @@
   }
 
   function goResult() {
-    window.location.href = "/events/" + encodeURIComponent(eid) + "/generate";
+    // 只導向一次，避免 has_story 早於評分完成時整頁狂刷
+    if (navigated) return;
+    navigated = true;
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+    window.location.replace(
+      "/events/" + encodeURIComponent(eid) + "/generate"
+    );
+  }
+
+  function isStillRunning(data) {
+    return !!(data.running || data.status === "running");
   }
 
   function poll() {
@@ -58,20 +75,22 @@
         return r.json();
       })
       .then(function (data) {
-        if (data.phase) showWait(data.phase);
-
-        if (data.has_story || data.status === "done") {
-          if (pollTimer) clearInterval(pollTimer);
-          goResult();
-          return;
-        }
         if (data.status === "error") {
           if (pollTimer) clearInterval(pollTimer);
           showError(data.error || "生成失敗，請稍後再試。");
           return;
         }
-        if (data.running || data.status === "running") {
+
+        // 成稿已寫入但背景仍在評分：只更新文案，禁止 reload
+        if (isStillRunning(data)) {
           showWait(data.phase || "generate");
+          return;
+        }
+
+        // 背景結束後才進成稿／調分頁
+        if (data.status === "done" || data.has_story) {
+          goResult();
+          return;
         }
       })
       .catch(function () {
@@ -84,6 +103,7 @@
       errEl.classList.add("is-hidden");
       errEl.textContent = "";
     }
+    navigated = false;
     showWait("generate");
     if (btn) btn.disabled = true;
 
@@ -106,7 +126,11 @@
         return r.json();
       })
       .then(function (data) {
-        if (data.has_story || data.status === "done") {
+        // 已完成且未在跑 → 直接看結果；剛啟動則開始輪詢
+        if (
+          !isStillRunning(data) &&
+          (data.status === "done" || data.has_story)
+        ) {
           goResult();
           return;
         }
@@ -130,7 +154,7 @@
     });
   }
 
-  // 頁面載入時若已在跑，繼續輪詢
+  // 頁面載入時若已在跑，繼續輪詢（勿因 has_story 提前跳轉）
   if (wait && !wait.classList.contains("is-hidden")) {
     pollTimer = setInterval(poll, 1500);
     poll();

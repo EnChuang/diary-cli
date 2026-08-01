@@ -28,12 +28,17 @@ if str(ROOT) not in sys.path:
 
 from storage.characters import leaderboard  # noqa: E402
 from storage.events import (  # noqa: E402
+    LIKELY_ROLE_LABELS,
     append_qa,
     delete_draft_event,
+    delete_event_tree,
     get_event,
     get_sole_draft,
     is_readable_event,
     list_events,
+    list_subtree_ids,
+    mark_cast_confirmed,
+    needs_cast_confirm,
     resume_step_for_event,
     set_status,
 )
@@ -50,7 +55,9 @@ from story_followup import (  # noqa: E402
 )
 from llm_client import format_llm_error  # noqa: E402
 from text_zh import to_traditional  # noqa: E402
+from storage.reset import is_local_data_empty, wipe_all_local_data  # noqa: E402
 from ui.gen_jobs import (  # noqa: E402
+    clear_all_jobs,
     clear_job,
     is_running,
     job_snapshot,
@@ -104,6 +111,8 @@ def _resume_url(ev: dict[str, Any]) -> str:
         return f"/events/{eid}/generate"
     if step == "detail":
         return f"/events/{eid}"
+    if step == "cast":
+        return f"/events/{eid}/cast"
     return f"/events/{eid}/followup"
 
 
@@ -171,8 +180,9 @@ def event_detail(request: Request, event_id: str) -> HTMLResponse:
         parent = get_event(ev["parent_event_id"])
         if parent:
             parent_title = parent_title_for_display(parent)
-    children = children_summary(event_id) if is_readable_event(ev) else []
+    children = children_summary(event_id)
     can_sequel = can_add_sequel(event_id)
+    child_count = max(0, len(list_subtree_ids(event_id)) - 1)
 
     return templates.TemplateResponse(
         "event_detail.html",
@@ -190,6 +200,7 @@ def event_detail(request: Request, event_id: str) -> HTMLResponse:
             "parent_title": parent_title,
             "children": children,
             "can_sequel": can_sequel,
+            "child_count": child_count,
         },
     )
 
@@ -305,7 +316,138 @@ def new_submit(
         )
 
     return RedirectResponse(
-        url=f"/events/{event['id']}/followup", status_code=303
+        url=f"/events/{event['id']}/cast", status_code=303
+    )
+
+
+@app.get("/events/{event_id}/cast", response_class=HTMLResponse)
+def cast_page(request: Request, event_id: str) -> HTMLResponse:
+    """出場人物確認（追問前）。"""
+    ev = get_event(event_id)
+    if ev is None:
+        raise HTTPException(404, "找不到事件")
+    if ev.get("status") == "confirmed":
+        return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    # 已確認過且在後段流程 → 導向正確步驟
+    if not needs_cast_confirm(ev) and not (
+        request.query_params.get("edit") in ("1", "true", "yes")
+    ):
+        return RedirectResponse(url=_resume_url(ev), status_code=303)
+
+    rows = []
+    for p in ev.get("participants") or []:
+        name = (p.get("temp_name") or "").strip()
+        rows.append(
+            {
+                "temp_name": name,
+                "is_user": bool(p.get("is_user")),
+                "likely_role": name in LIKELY_ROLE_LABELS,
+            }
+        )
+
+    return templates.TemplateResponse(
+        "cast.html",
+        {
+            "request": request,
+            "ev": ev,
+            "cast_rows": rows,
+            "error": None,
+            "page": "cast",
+            "list_title": _event_title(ev),
+            "parent_title": _parent_title_line(ev),
+        },
+    )
+
+
+@app.post("/events/{event_id}/cast", response_class=HTMLResponse)
+async def cast_save(request: Request, event_id: str) -> HTMLResponse:
+    """儲存確認後的出場表，進入追問。"""
+    from story_score import save_participants
+
+    ev = get_event(event_id)
+    if ev is None:
+        raise HTTPException(404, "找不到事件")
+    if ev.get("status") == "confirmed":
+        return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+
+    form = await request.form()
+    try:
+        count = int(form.get("count") or "0")
+    except ValueError:
+        count = 0
+
+    participants: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for i in range(max(0, count)):
+        name = to_traditional((form.get(f"name_{i}") or "").strip())
+        if not name:
+            continue
+        # 勾選刪除
+        if form.get(f"drop_{i}") in ("1", "on", "true", "yes"):
+            continue
+        is_user = form.get(f"user_{i}") in ("1", "on", "true", "yes")
+        key = name
+        if key in seen and not is_user:
+            continue
+        seen.add(key)
+        participants.append(
+            {
+                "character_id": "self" if is_user else None,
+                "temp_name": name,
+                "is_user": is_user,
+                "event_score": None,
+            }
+        )
+
+    # 至少保留結構（允許零個非本人，但通常至少有人）
+    error = None
+    non_user = [p for p in participants if not p["is_user"]]
+    if not participants:
+        error = "請至少保留一位出場者（或新增人名）。若主文只有你自己，請新增並勾選「是我本人」。"
+    elif not non_user and not any(p["is_user"] for p in participants):
+        error = "請確認出場名單。"
+
+    if error:
+        rows = []
+        for p in participants or ev.get("participants") or []:
+            name = (p.get("temp_name") or "").strip()
+            rows.append(
+                {
+                    "temp_name": name,
+                    "is_user": bool(p.get("is_user")),
+                    "likely_role": name in LIKELY_ROLE_LABELS,
+                }
+            )
+        # 若全刪了，用表單 raw 重建空表給 UI
+        if not rows:
+            for i in range(max(1, count)):
+                name = to_traditional((form.get(f"name_{i}") or "").strip())
+                rows.append(
+                    {
+                        "temp_name": name,
+                        "is_user": form.get(f"user_{i}")
+                        in ("1", "on", "true", "yes"),
+                        "likely_role": name in LIKELY_ROLE_LABELS,
+                    }
+                )
+        return templates.TemplateResponse(
+            "cast.html",
+            {
+                "request": request,
+                "ev": ev,
+                "cast_rows": rows,
+                "error": error,
+                "page": "cast",
+                "list_title": _event_title(ev),
+                "parent_title": _parent_title_line(ev),
+            },
+            status_code=400,
+        )
+
+    save_participants(event_id, participants, None)
+    mark_cast_confirmed(event_id)
+    return RedirectResponse(
+        url=f"/events/{event_id}/followup", status_code=303
     )
 
 
@@ -354,12 +496,18 @@ def _last_assistant_question(ev: dict[str, Any]) -> str:
 
 
 @app.get("/events/{event_id}/followup", response_class=HTMLResponse)
-def followup_page(request: Request, event_id: str) -> HTMLResponse:
+def followup_page(
+    request: Request, event_id: str, after_skip: str = ""
+) -> HTMLResponse:
     ev = get_event(event_id)
     if ev is None:
         raise HTTPException(404, "找不到事件")
     if ev.get("status") == "confirmed":
         return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    if needs_cast_confirm(ev):
+        return RedirectResponse(
+            url=f"/events/{event_id}/cast", status_code=303
+        )
 
     error = None
     fu: Optional[dict[str, Any]] = None
@@ -399,6 +547,8 @@ def followup_page(request: Request, event_id: str) -> HTMLResponse:
     elif not display_q:
         display_q = "（尚無問題）"
 
+    skip_wrap_hint = after_skip in ("1", "true", "yes") and ready_complete
+
     return templates.TemplateResponse(
         "followup.html",
         {
@@ -407,6 +557,7 @@ def followup_page(request: Request, event_id: str) -> HTMLResponse:
             "fu": fu,
             "display_question": display_q,
             "ready_complete": ready_complete,
+            "skip_wrap_hint": skip_wrap_hint,
             "error": error,
             "page": "followup",
             "list_title": _event_title(ev),
@@ -418,7 +569,7 @@ def followup_page(request: Request, event_id: str) -> HTMLResponse:
 @app.post("/events/{event_id}/followup")
 def followup_action(
     event_id: str,
-    action: str = Form(...),  # answer | skip | done
+    action: str = Form("answer"),  # answer | skip | done（缺省視為回答）
     answer: str = Form(""),
 ) -> RedirectResponse:
     ev = get_event(event_id)
@@ -426,15 +577,35 @@ def followup_action(
         raise HTTPException(404, "找不到事件")
     if ev.get("status") == "confirmed":
         return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    if needs_cast_confirm(ev):
+        return RedirectResponse(
+            url=f"/events/{event_id}/cast", status_code=303
+        )
 
-    action = (action or "").strip().lower()
+    action = (action or "answer").strip().lower()
     if action == "done":
         set_status(event_id, "awaiting_generate")
         return RedirectResponse(url=f"/events/{event_id}/generate", status_code=303)
     if action == "skip":
+        # 跳過本題 → 立刻產下一問；若已無問題則進入「可到此為止」狀態（勿靜默無反應）
         append_qa(event_id, "user", "（跳過）")
-        return RedirectResponse(url=f"/events/{event_id}/followup", status_code=303)
-    # answer
+        wrap = False
+        try:
+            ev2 = get_event(event_id) or ev
+            _ev_u, fu = ensure_pending_question(ev2)
+            wrap = bool(fu and fu.get("ready_to_generate"))
+        except Exception:
+            # GET 頁會再試／顯示錯誤
+            pass
+        if wrap:
+            return RedirectResponse(
+                url=f"/events/{event_id}/followup?after_skip=1",
+                status_code=303,
+            )
+        return RedirectResponse(
+            url=f"/events/{event_id}/followup", status_code=303
+        )
+    # answer（含未知 action：保守當回答）
     text = to_traditional((answer or "").strip())
     if text:
         append_qa(event_id, "user", text)
@@ -636,6 +807,7 @@ async def generate_run(request: Request, event_id: str) -> HTMLResponse:
         for i in range(count):
             raw = form.get(f"score_{i}")
             name = (form.get(f"name_{i}") or "").strip()
+            reason = to_traditional((form.get(f"reason_{i}") or "").strip())
             try:
                 sc = int(str(raw).strip())
             except (TypeError, ValueError):
@@ -650,6 +822,8 @@ async def generate_run(request: Request, event_id: str) -> HTMLResponse:
                         break
             if target is not None:
                 target["event_score"] = sc
+                # 使用者可改 AI 評語，落盤寫入 score_reason
+                target["score_reason"] = reason
         scores_list = [
             int(p["event_score"])
             for p in parts
@@ -684,6 +858,97 @@ def score_page(event_id: str) -> RedirectResponse:
 @app.post("/events/{event_id}/score", response_class=HTMLResponse)
 async def score_run(event_id: str) -> RedirectResponse:
     return RedirectResponse(url=f"/events/{event_id}/generate", status_code=303)
+
+
+# —— 放棄未落盤事件（流程各步共用） ——
+
+
+@app.post("/events/{event_id}/abandon")
+def abandon_event(event_id: str) -> RedirectResponse:
+    """刪除未 confirmed 草稿／進行中事件，回首頁。"""
+    ev = get_event(event_id)
+    if ev is None:
+        return RedirectResponse(url="/", status_code=303)
+    if ev.get("status") == "confirmed":
+        raise HTTPException(status_code=400, detail="已落成事件請用「刪除」")
+    try:
+        ids = list_subtree_ids(event_id)
+        for i in ids:
+            clear_job(i)
+        delete_draft_event(event_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return RedirectResponse(url="/?abandoned=1", status_code=303)
+
+
+@app.post("/events/{event_id}/delete")
+def delete_event_route(event_id: str) -> RedirectResponse:
+    """
+    刪除本篇；若有後續則連刪全部子孫。
+    清除 ledger 後重算歷史榜。刪子不刪父。
+    成功／失敗皆回首頁（計分榜），避免停在已刪事件或錯誤頁。
+    """
+    try:
+        if get_event(event_id) is not None:
+            for i in list_subtree_ids(event_id):
+                try:
+                    clear_job(i)
+                except Exception:
+                    pass
+            delete_event_tree(event_id, recompute_scores=True)
+    except Exception:
+        pass
+    return RedirectResponse(url="/", status_code=303)
+
+
+# —— 一鍵銷毀（低調入口：頁腳；確認框後才執行） ——
+
+
+@app.get("/settings/wipe", response_class=HTMLResponse)
+def wipe_page(request: Request) -> HTMLResponse:
+    empty = is_local_data_empty()
+    return templates.TemplateResponse(
+        "wipe.html",
+        {
+            "request": request,
+            "page": "wipe",
+            "error": None,
+            "already_empty": empty,
+        },
+    )
+
+
+@app.post("/settings/wipe", response_class=HTMLResponse)
+def wipe_run(
+    request: Request,
+    confirm: str = Form(""),
+) -> HTMLResponse:
+    if is_local_data_empty():
+        return templates.TemplateResponse(
+            "wipe.html",
+            {
+                "request": request,
+                "page": "wipe",
+                "error": None,
+                "already_empty": True,
+                "show_empty_hint": True,
+            },
+        )
+    # 須經確認框送出 confirm=1
+    if confirm not in ("1", "yes", "true", "on"):
+        return templates.TemplateResponse(
+            "wipe.html",
+            {
+                "request": request,
+                "page": "wipe",
+                "error": "未確認，未執行銷毀。請再次點「一鍵銷毀」並在確認框選擇確認。",
+                "already_empty": False,
+            },
+            status_code=400,
+        )
+    wipe_all_local_data()
+    clear_all_jobs()
+    return RedirectResponse(url="/?wiped=1", status_code=303)
 
 
 def main() -> None:

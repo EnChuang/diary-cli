@@ -519,6 +519,105 @@ html[data-theme="dark"] .badge.sequel {
   color: #ff8a8a;
 }
 
+/* —— 確認出場人物 —— */
+.cast-card .cast-lead {
+  margin: 0.35rem 0 1rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.cast-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.cast-row {
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--rank-card-bg);
+  border: 0.5px solid var(--rank-card-border);
+  box-shadow: var(--rank-card-shadow);
+}
+
+.cast-row.is-warn {
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--border));
+  background: color-mix(in srgb, var(--warning-bg) 55%, var(--rank-card-bg));
+}
+
+.cast-field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-bottom: 0.3rem;
+}
+
+.cast-name-label {
+  display: block;
+  margin: 0;
+}
+
+.cast-name-label input[type="text"] {
+  width: 100%;
+}
+
+.cast-warn {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.cast-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.1rem;
+  margin-top: 0.65rem;
+}
+
+.cast-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.cast-check input {
+  accent-color: var(--brand);
+}
+
+.cast-drop {
+  color: var(--danger);
+}
+
+.actions-between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 流程各步：放棄並刪除未落盤事件 */
+.flow-abandon {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 0.5px solid var(--border, rgba(128, 128, 128, 0.22));
+  display: flex;
+  justify-content: flex-start;
+}
+
+.abandon-form {
+  display: inline-flex;
+  margin: 0;
+}
+
 /* —— 01 首頁：歷史榜 + 事件 —— */
 .home-section .section-head {
   display: flex;
@@ -1025,6 +1124,17 @@ button:disabled {
 }
 
 /* —— 訊息 —— */
+.info-banner {
+  background: rgba(42, 122, 59, 0.1);
+  border: 0.5px solid rgba(42, 122, 59, 0.28);
+  color: var(--primary-100);
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 .error {
   background: var(--danger-bg);
   border: 0.5px solid rgba(194, 29, 3, 0.28);
@@ -1113,10 +1223,94 @@ button:disabled {
 
 footer.note {
   margin-top: 2.5rem;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-tertiary);
   text-align: center;
   line-height: 1.45;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.85rem;
+}
+
+.footer-meta {
+  opacity: 0.85;
+}
+
+/* 低調：幾乎融入頁腳，hover 才稍清楚 */
+.footer-wipe {
+  color: var(--text-tertiary) !important;
+  opacity: 0.32;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-decoration: none !important;
+}
+
+.footer-wipe:hover {
+  opacity: 0.65;
+  color: var(--text-secondary) !important;
+}
+
+.wipe-lead {
+  margin: 0.35rem 0 1rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* 一鍵銷毀確認框 */
+.wipe-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.wipe-modal[hidden] {
+  display: none !important;
+}
+
+.wipe-modal-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 28, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.wipe-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 20rem);
+  padding: 1.35rem 1.25rem 1.2rem;
+  border-radius: 18px;
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.wipe-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.wipe-modal-body {
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .wipe-modal-scrim {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 /* —— 防窺閘 · Liquid Glass（靈感 liquid-glass-studio；CSS+SVG 折射，非完整 WebGL） —— */
@@ -1656,6 +1850,12 @@ button.btn-ai .btn-spinner {
 }
 
 /* —— 評分步進 —— */
+.score-edit-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .score-step-list {
   list-style: none;
   margin: 0;
@@ -1664,10 +1864,10 @@ button.btn-ai .btn-spinner {
 
 .score-step-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.75rem 0;
+  padding: 0.85rem 0;
   border-bottom: 0.5px solid var(--separator);
 }
 
@@ -1680,7 +1880,7 @@ button.btn-ai .btn-spinner {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.35rem;
 }
 
 .score-step-name {
@@ -1693,11 +1893,49 @@ button.btn-ai .btn-spinner {
   line-height: 1.35;
 }
 
+.score-reason-label {
+  display: block;
+  margin: 0;
+}
+
+.score-step-reason-input {
+  width: 100%;
+  min-height: 2.6rem;
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  resize: vertical;
+  border-radius: var(--radius-sm, 8px);
+  border: 0.5px solid var(--separator, rgba(128, 128, 128, 0.35));
+  background: var(--surface-secondary, var(--bg, #fff));
+  color: inherit;
+  font-family: inherit;
+}
+
+.score-step-reason-input:focus {
+  outline: 2px solid var(--brand, #c41d03);
+  outline-offset: 1px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .score-step-ctrl {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
+  padding-top: 0.15rem;
 }
 
 .step-btn {
@@ -1741,6 +1979,18 @@ button.btn-ai .btn-spinner {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+.event-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.delete-event-form {
+  display: inline-flex;
+  margin: 0;
 }
 
 .btn-plus {

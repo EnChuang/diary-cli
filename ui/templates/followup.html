@@ -13,6 +13,11 @@
 <p class="sequel-line">延續：{{ parent_title }}</p>
 {% endif %}
 {% if error %}<div class="error">{{ error }}</div>{% endif %}
+{% if skip_wrap_hint %}
+<div class="info-banner" role="status">
+  本題已跳過，目前沒有更多追問。請按「到此為止」進入成稿，或再補充幾句。
+</div>
+{% endif %}
 
 <section class="card followup-card">
   <header class="card-head">
@@ -53,16 +58,24 @@
         <span class="btn-label">送出回答</span>
         <span class="btn-spinner spinner" aria-hidden="true"></span>
       </button>
-      <button type="submit" name="action" value="skip" class="ghost">跳過</button>
+      {# 跳過也會觸發 AI 產下一問，需 loading，避免「按了沒反應」 #}
+      <button type="submit" name="action" value="skip" class="ghost btn-ai" data-ai-submit>
+        <span class="btn-label">跳過</span>
+        <span class="btn-spinner spinner" aria-hidden="true"></span>
+      </button>
+      <button type="submit" name="action" value="done" class="ghost">到此為止</button>
       {% else %}
       <button type="submit" name="action" value="answer" class="btn btn-ai" data-ai-submit>
         <span class="btn-label">送出補充</span>
         <span class="btn-spinner spinner" aria-hidden="true"></span>
       </button>
+      <button type="submit" name="action" value="done" class="primary">到此為止</button>
       {% endif %}
-      <button type="submit" name="action" value="done" class="{% if ready_complete %}primary{% else %}danger{% endif %}">到此為止</button>
     </div>
   </form>
+  <div class="flow-abandon">
+    {% include "partials/abandon_event.html" %}
+  </div>
 </section>
 
 {% if ev.qa_thread %}
@@ -100,5 +113,5 @@
   if (text) el.textContent = text;
 })();
 </script>
-<script src="/static/ai-loading.js" defer></script>
+<script src="/static/ai-loading.js?v=skip-load" defer></script>
 {% endblock %}

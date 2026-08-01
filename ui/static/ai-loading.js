@@ -76,36 +76,80 @@
       lockForm(form, btn);
 
       var fd = new FormData(form);
-      if (submitter && submitter.name) {
-        fd.set(submitter.name, submitter.value || "on");
+      // FormData 不含被點的 submit 按鈕；e.submitter 在 Enter／部分瀏覽器可能為空
+      var who =
+        submitter && submitter.name
+          ? submitter
+          : btn && btn.name
+            ? btn
+            : null;
+      if (who && who.name) {
+        fd.set(who.name, who.value || "on");
+      }
+      // 追問等表單：後端需要 action；缺了會 422
+      if (!fd.has("action")) {
+        var actBtn =
+          (submitter &&
+            submitter.name === "action" &&
+            submitter) ||
+          form.querySelector('button[type="submit"][name="action"]') ||
+          btn;
+        if (actBtn && actBtn.name === "action") {
+          fd.set("action", actBtn.value || "answer");
+        } else {
+          fd.set("action", "answer");
+        }
       }
 
-      fetch(form.action, {
-        method: (form.method || "POST").toUpperCase(),
+      // 注意：表單若有 name="action" 的按鈕，form.action 會被蓋成元素／值（非 URL）
+      // 必須用 getAttribute，否則 fetch 會打到 /events/.../answer → 404
+      var postUrl =
+        form.getAttribute("action") || form.getAttribute("data-action") || "";
+      if (!postUrl) {
+        unlockForm(form);
+        showInlineError(form, "表單缺少送出網址，請重新整理後再試。");
+        return;
+      }
+      var method = (
+        form.getAttribute("method") ||
+        form.method ||
+        "POST"
+      ).toUpperCase();
+
+      fetch(postUrl, {
+        method: method,
         body: fd,
         credentials: "same-origin",
         redirect: "follow",
         headers: { Accept: "text/html" },
       })
         .then(function (res) {
-          // follow 後最終 URL（成稿頁或錯誤頁）
-          if (res.redirected || res.url) {
-            // 成功導向結果頁
-            if (res.ok || res.status === 0) {
+          // 成功：導向最終 URL（redirect follow 後）或整頁替換 HTML
+          if (res.ok) {
+            if (res.redirected && res.url) {
               window.location.href = res.url;
               return null;
             }
-          }
-          if (res.ok) {
+            if (res.url && res.url !== window.location.href) {
+              // 部分環境 redirected 旗標不準，但最終 URL 已變
+              try {
+                var finalPath = new URL(res.url, window.location.href).pathname;
+                var here = window.location.pathname;
+                if (finalPath !== here) {
+                  window.location.href = res.url;
+                  return null;
+                }
+              } catch (err) {
+                /* ignore */
+              }
+            }
             return res.text().then(function (html) {
-              // 以伺服器 HTML 整頁替換（含錯誤訊息）
               document.open();
               document.write(html);
               document.close();
             });
           }
           return res.text().then(function (html) {
-            // 500：若 body 是完整頁就替換，否則顯示摘要
             if (html && html.indexOf("<html") !== -1) {
               document.open();
               document.write(html);

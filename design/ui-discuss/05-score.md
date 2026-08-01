@@ -1,35 +1,30 @@
 # 05 · 評分建議與落盤
 
-## 現況（程式）
+## 現況（程式）2026-08-01
 
-- 路由：`GET/POST /events/{id}/score`  
-- 模板：`ui/templates/score.html`  
-- 操作：**取得 AI 建議分**、**確認落盤**  
-- 規則：本場平均 ±10、不評「我」、confirm → ledger  
+- 評分已併入 **`/events/{id}/generate`**（成稿後同頁調分）  
+- 舊 `/score` 導向 generate  
+- 操作：AI 建議分 → **± 調分** → **評語可編** → 確認落盤  
+- 規則：本場平均 ±10、不評「我」、confirm → ledger；觀感分見 skill  
 
 ## 規格鎖定
 
-- 分數語意＝使用者主觀；可改分後再落盤（CLI 有調分；**Web 調分 UI 尚未做**）  
-- 確認才寫歷史榜  
-- 材料含問答（使用者補充會影響建議分）  
-
-## 討論中
-
-- （Web 是否要做每人分數輸入框／滑桿）
+- 分數語意＝**使用者主觀觀感**（非道德／可怜）  
+- 確認才寫歷史榜；材料含主文／問答／成稿  
 
 ## 已決
 
 | 日期 | 決議 | 備註 |
 |------|------|------|
-| | | |
+| 2026-08-01 | Web 調分＋評語可編 | generate 頁 |
+| 2026-08-01 | 評分核心長線計畫 | `design/scoring/` |
 
-## 待做（實作）
+## 待做
 
-- [ ] UI 調分（對齊 CLI interactive_adjust）  
-- [ ] 落盤成功回饋後導向 D21 閱讀頁  
+- [ ] 人類校準 C1 → 長版 skill／金標（見 scoring plan）  
+- [ ] （可選）只重跑 AI 評分、不重生成稿  
 
-## 參考素材
+## 參考
 
-- styles：  
-- motion：  
-- references：`05-score-*.png`  
+- **評分核心計畫**：[`design/scoring/00-score-core-plan.md`](../scoring/00-score-core-plan.md)  
+- 執行 skill：[`skill/story_score.md`](../../skill/story_score.md)  
