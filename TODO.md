@@ -1,8 +1,9 @@
 # 待做（Yes Log / diary-cli）
 
 > 根目錄提醒用。完成一項可勾選或移到「已完成」。  
-> 更新：2026-08-01（收工）  
-> 詳細收工狀態：`dev-local/SESSION.md`（不進 Git）
+> 更新：2026-08-01  
+> 詳細狀態：`dev-local/SESSION.md`（不進 Git）  
+> **可還原**：[`MILESTONES.md`](./MILESTONES.md) → tag **`v0.2.0`**（`2c4b699`）
 
 ---
 

@@ -16,6 +16,7 @@
 | **[USAGE.md](./USAGE.md)** | 你：怎麼測、完整規則 |
 | **[AGENTS.md](./AGENTS.md)** | AI Agent 交接 |
 | **[TODO.md](./TODO.md)** | 待辦勾選（含評分核心） |
+| **[MILESTONES.md](./MILESTONES.md)** | **Git 可還原節點**（如 `v0.2.0`） |
 | **`dev-local/SESSION.md`** | 本機進度（不進 Git） |
 
 ---
