@@ -1,4 +1,10 @@
+# —— API Key 本機檔：永遠不上傳（你開發用這個）——
 .env
+.env.local
+.env.*.local
+# 允許倉庫內的範本（無真 Key，給 clone 使用者複製用）
+!.env.example
+
 .venv/
 venv/
 __pycache__/

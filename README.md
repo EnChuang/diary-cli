@@ -44,6 +44,13 @@
 
 ## 從 GitHub 重現（clone 後）
 
+**完整 API Key 說明 → [SETUP_API_KEY.md](./SETUP_API_KEY.md)**
+
+| 檔案 | 是否進 Git | 說明 |
+|------|------------|------|
+| **`.env.example`** | ✅ **是** | 無真 Key 的範本＋欄位說明（給重現用） |
+| **`.env`** | ❌ **否** | 本機私密；你開發用自己的 Key，**git 不同步** |
+
 ```powershell
 git clone https://github.com/EnChuang/diary-cli.git
 cd diary-cli
@@ -51,25 +58,13 @@ python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 
-# ① 建立本機金鑰檔（不會也不應上傳 Git）
-copy .env.example .env
+.\setup_env.ps1          # 從 .env.example 產生本機 .env（不覆寫已有檔）
+notepad .env             # 填入你自己的 ARK_API_KEY=ark-...
 
-# ② 用記事本／VS Code 打開 .env，填入你自己的 Key：
-#    ARK_API_KEY=ark-xxxxxxxx
-#    （可選）ARK_BASE_URL、ARK_MODEL 依你的 ModelArk／火山控制台
-
-# ③ 啟動 UI
 .\run_ui.ps1 -NoReload
 ```
 
 瀏覽器：<http://127.0.0.1:8765>
-
-| 檔案 | 是否進 Git | 說明 |
-|------|------------|------|
-| **`.env`** | **否**（`.gitignore`） | **只放你自己的 API Key**，勿提交、勿分享 |
-| **`.env.example`** | 是 | 範本，僅 placeholder，無真 Key |
-
-未填 `ARK_API_KEY` 時，呼叫 AI 會提示到 `.env` 設定金鑰。
 
 ---
 
