@@ -72,6 +72,12 @@ python board.py rank
 
 未指定時讀 **`dev-local/SESSION.md`** + **`TODO.md`**，小步改，勿整包重寫。對話用**繁體中文**。
 
+### 核心檔案地圖（本機）
+
+- 路徑：`design/product/CORE-FILES.md`（**.gitignore，不上傳 Git**）  
+- **凡新增或大改**會影響「核心 vs 可換皮」邊界的檔案，必須**同步更新**該檔（分類、維護日誌）。  
+- 使用者可一眼看哪些是 idea 核心、哪些只是 UI 皮。
+
 ### 冷啟動
 
 ```text

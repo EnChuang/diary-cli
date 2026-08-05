@@ -16,6 +16,11 @@ data/.pending_generate_*.json
 # 本機開發文件／素材（構想、進度、schema 草稿、截圖等）
 dev-local/
 
+# 核心地圖與深度校準作答（本機；含個資敘事時勿推）
+design/product/CORE-FILES.md
+design/scoring/05-answers.md
+design/scoring/05-deep-calibration.md
+
 # 設計參考大檔（.md 說明可進 git；圖／影片本機即可）
 design/references/**
 !design/references/.gitkeep

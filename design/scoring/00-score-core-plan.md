@@ -49,7 +49,9 @@ design/scoring/
 ├── 02-traps-catalog.md       ← 人類情緒／敘事陷阱目錄
 ├── 03-calibration-log.md     ← 出題→人類答案→模型結果→決議
 ├── 04-gold-set.md            ← 金標測資索引（故事摘要＋期望分帶）
-└── fixtures/                 ← 可選：完整 JSON 測資（或放 tests/，勿 commit 含隱私）
+├── 05-deep-calibration.md    ← **慢而細**深度校準手冊（主人作答＋討論）
+├── c1- / c2-*.md             ← 短題／完整題
+└── fixtures/                 ← 金標 JSON
 ```
 
 **流程**：`01/02/03` 裡先跟人類對齊 → 再**蒸餾**進 `skill/story_score.md`（執行檔保持「能跑、能重現」，細節夠但仍有章節）。

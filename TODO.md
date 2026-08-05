@@ -3,7 +3,8 @@
 > 根目錄提醒用。完成一項可勾選或移到「已完成」。  
 > 更新：2026-08-01  
 > 詳細狀態：`dev-local/SESSION.md`（不進 Git）  
-> **可還原**：[`MILESTONES.md`](./MILESTONES.md) → **`v0.2.1`**（C1 後 skill）／`v0.2.0`（C1 前）
+> **可還原**：[`MILESTONES.md`](./MILESTONES.md) → **`v0.2.1`**（C1 後 skill）／`v0.2.0`（C1 前）  
+> **核心地圖（本機不上傳）**：`design/product/CORE-FILES.md`
 
 ---
 
@@ -20,7 +21,8 @@
 | P1b 寫入 skill | C1 決議 → 中帶／重扣門檻／無感 0 | ✅ |
 | P1c 對拍 | 新 skill vs 人類；S-10 已修 | ✅ |
 | P2 金標 v1 | fixtures + run_gold_v1.py | ✅ |
-| P2b C2 工作表 | 完整主文＋問答 2 則待答 | ⬜ 待你填 |
+| P2b C2 工作表 | 完整主文＋問答 2 則待答 | ⬜ 可選 |
+| **P2c 深度校準** | 慢而細 · [`05-deep-calibration.md`](design/scoring/05-deep-calibration.md) | ⬜ **進行中** |
 | P3 長版 skill few-shot | 可選再加厚 | ⬜ |
 | P4 改 skill 後必跑金標 | `python dev-local/scratch/run_gold_v1.py` | ✅ 腳本已有 |
 | P5 換模型壓力測 | 可選 | ⬜ |
