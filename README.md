@@ -42,7 +42,38 @@
 
 ---
 
-## 安裝
+## 從 GitHub 重現（clone 後）
+
+```powershell
+git clone https://github.com/EnChuang/diary-cli.git
+cd diary-cli
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+
+# ① 建立本機金鑰檔（不會也不應上傳 Git）
+copy .env.example .env
+
+# ② 用記事本／VS Code 打開 .env，填入你自己的 Key：
+#    ARK_API_KEY=ark-xxxxxxxx
+#    （可選）ARK_BASE_URL、ARK_MODEL 依你的 ModelArk／火山控制台
+
+# ③ 啟動 UI
+.\run_ui.ps1 -NoReload
+```
+
+瀏覽器：<http://127.0.0.1:8765>
+
+| 檔案 | 是否進 Git | 說明 |
+|------|------------|------|
+| **`.env`** | **否**（`.gitignore`） | **只放你自己的 API Key**，勿提交、勿分享 |
+| **`.env.example`** | 是 | 範本，僅 placeholder，無真 Key |
+
+未填 `ARK_API_KEY` 時，呼叫 AI 會提示到 `.env` 設定金鑰。
+
+---
+
+## 安裝（本機已有專案時）
 
 ```powershell
 cd C:\DATA\A_Developement\Project\diary-cli
@@ -50,7 +81,7 @@ python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
-# 編輯 .env，填入 ARK_API_KEY
+# 編輯 .env，填入你的 ARK_API_KEY（不要用別人的 Key）
 ```
 
 ---
@@ -92,21 +123,24 @@ python board.py rank
 
 ---
 
-## 環境變數
+## 環境變數（寫在本機 `.env`）
 
-| 變數 | 說明 |
-|------|------|
-| `ARK_API_KEY` | 必填 |
-| `ARK_BASE_URL` | 可選 |
-| `ARK_MODEL` | 可選，須已開通 |
+| 變數 | 必填 | 說明 |
+|------|------|------|
+| `ARK_API_KEY` | **是** | 你的 ModelArk／方舟金鑰（`ark-...`） |
+| `ARK_BASE_URL` | 否 | API 端點，預見 `.env.example` |
+| `ARK_MODEL` | 否 | 已開通的模型或接入點 ID |
+
+金鑰請到 **BytePlus ModelArk** 或 **火山引擎方舟** 控制台自行申請；本專案採 **BYOK**（Bring Your Own Key），作者不會、也不應把真 Key 放進 GitHub。
 
 ---
 
 ## 安全
 
-- 事件內容會送至 ModelArk  
-- **勿提交** `.env`、`data/*.jsonl`、`dev-local/`  
-- 勿在對話或 commit 中回顯 API Key  
+- 事件內容會送至你設定的 AI 服務商（ModelArk 等）  
+- **絕對勿提交** `.env`（含 API Key）、`data/*.jsonl`、`dev-local/`  
+- 勿在 Issue、PR、聊天中貼出 Key；若曾外洩請到控制台**作廢並換新 Key**  
+- 倉庫內只有 [`.env.example`](./.env.example) 範本，**沒有**可用的真金鑰  
 
 ---
 

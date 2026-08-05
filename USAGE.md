@@ -42,24 +42,35 @@ diary-cli/
 
 ---
 
-## 2. 第一次準備
+## 2. 第一次準備（含從 GitHub clone）
 
 ```powershell
-cd C:\DATA\A_Developement\Project\diary-cli
-.\.venv\Scripts\activate
-# 若無 venv：
-#   python -m venv .venv
-#   .\.venv\Scripts\activate
-#   pip install -r requirements.txt
+# clone 後進入專案根
+cd diary-cli   # 或你的路徑：C:\DATA\A_Developement\Project\diary-cli
 
-# .env 需有 ARK_API_KEY（可從 .env.example 複製）
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+
+# —— API Key（必做，且只用你自己的）——
+copy .env.example .env
+# 編輯 .env：
+#   ARK_API_KEY=ark-你在控制台申請的金鑰
+#   （可選）ARK_BASE_URL、ARK_MODEL
 ```
+
+| 檔案 | 進 Git？ | 說明 |
+|------|----------|------|
+| `.env` | **否** | 本機私密；gitignore 已擋 |
+| `.env.example` | 是 | 只有 placeholder，引導你填自己的 Key |
 
 | 變數 | 說明 |
 |------|------|
-| `ARK_API_KEY` | 必填 |
-| `ARK_BASE_URL` | 可選，預設東南亞 BytePlus |
+| `ARK_API_KEY` | **必填**，你自己的 ModelArk／方舟 Key |
+| `ARK_BASE_URL` | 可選，見 `.env.example` 註解 |
 | `ARK_MODEL` | 可選，須在控制台已開通 |
+
+**沒有作者的 Key 可用。** 未設定時 AI 功能會明確報錯，請回頭檢查 `.env`。
 
 ---
 
